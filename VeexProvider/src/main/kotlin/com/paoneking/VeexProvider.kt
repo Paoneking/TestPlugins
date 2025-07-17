@@ -10,7 +10,6 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
-import kotlinx.coroutines.runBlocking
 
 class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var name = "Veex Netflix"
@@ -19,8 +18,7 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
     override val hasDownloadSupport = true
     override val supportedTypes = setOf(
         TvType.Movie,
-        TvType.TvSeries,
-        TvType.Cartoon
+        TvType.TvSeries
     )
 
     override val mainPage = mainPageOf(
@@ -51,11 +49,4 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
         const val BASE_URL =
             "https://netflix.veex.cc/api/%s/by/filtres/0/created/0/4F5A9C3D9A86FA54EACEDDD635185/26a3547f-6db2-44f3-b4c8-3b8dcf1e871a/"
     }
-}
-
-fun main() = runBlocking {
-    val res =
-        app.get("https://netflix.veex.cc/api/movie/by/filtres/0/created/0/4F5A9C3D9A86FA54EACEDDD635185/26a3547f-6db2-44f3-b4c8-3b8dcf1e871a/")
-            .parsedSafe<List<MovieItem>>()
-    println("res: $res")
 }

@@ -27,5 +27,5 @@ cloudstream {
     )
     iconUrl = "https://raw.githubusercontent.com/LikDev-256/likdev256-tamil-providers/master/AllMovieLandProvider/icon.png"
 
-//    isCrossPlatform = true
+    isCrossPlatform = true
 }
