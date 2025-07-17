@@ -1,0 +1,8 @@
+{
+    "name": "Paoneking Repo",
+    "description": "Paoneking Repository",
+    "manifestVersion": 1,
+    "pluginLists": [
+      "https://raw.githubusercontent.com/Paoneking/TestPlugins/builds/plugins.json"
+    ]
+  }
