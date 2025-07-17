@@ -1,5 +1,6 @@
 package com.paoneking
 
+import android.media.browse.MediaBrowser.MediaItem
 import com.lagradost.api.Log
 import com.lagradost.cloudstream3.ErrorLoadingException
 import com.lagradost.cloudstream3.HomePageResponse
@@ -11,6 +12,9 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
+import com.lagradost.cloudstream3.utils.AppUtils.toJson
+import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
+import kotlinx.coroutines.runBlocking
 
 class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var name = "Veex Netflix"
@@ -30,11 +34,12 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         runCatching {
             Log.d("veex", "getMainPage")
-            val res = app.get(request.data).parsedSafe<List<MovieItem>>()
+            val res = tryParseJson<List<MovieItem>>(app.get(request.data).toString())
+
             val searchResponses: List<SearchResponse> = res?.map { it.toSearchResponse() }
                 ?: throw ErrorLoadingException("Invalid JSON response")
             Log.d("veex", "searchResponses: $searchResponses")
-            val homePage =  newHomePageResponse(
+            val homePage = newHomePageResponse(
                 request, searchResponses
             )
             Log.d("veex", "homePage: $homePage")
@@ -61,4 +66,17 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
         const val BASE_URL =
             "https://netflix.veex.cc/api/%s/by/filtres/0/created/0/4F5A9C3D9A86FA54EACEDDD635185/26a3547f-6db2-44f3-b4c8-3b8dcf1e871a/"
     }
+}
+
+fun main() = runBlocking {
+    val veexProvider = VeexProvider()
+    val ss = veexProvider.getMainPage(
+        1,
+        MainPageRequest(
+            "Movies",
+            "https://netflix.veex.cc/api/movie/by/filtres/0/created/0/4F5A9C3D9A86FA54EACEDDD635185/26a3547f-6db2-44f3-b4c8-3b8dcf1e871a/",
+            false
+        )
+    )
+    println("ss: $ss")
 }
