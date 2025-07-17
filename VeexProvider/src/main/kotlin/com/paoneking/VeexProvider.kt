@@ -39,11 +39,12 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
 
     private fun MovieItem.toSearchResponse(): SearchResponse {
         return newMovieSearchResponse(
-            title,
+            "$title ($year)",
             id.toString(),
             getType(type)
         ) {
             this.posterUrl = image
+            this.year = this@toSearchResponse.year
         }
     }
 
