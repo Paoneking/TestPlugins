@@ -1,7 +1,5 @@
 package com.paoneking
 
-import android.media.browse.MediaBrowser.MediaItem
-import com.lagradost.api.Log
 import com.lagradost.cloudstream3.ErrorLoadingException
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.MainAPI
@@ -12,7 +10,6 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
-import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import kotlinx.coroutines.runBlocking
 
@@ -28,38 +25,32 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
 
     override val mainPage = mainPageOf(
         BASE_URL.format("movie") to "Movies",
-//        BASE_URL.format("serie") to "Series",
+        BASE_URL.format("serie") to "Series",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        runCatching {
-            Log.d("veex", "getMainPage")
-            val res = tryParseJson<List<MovieItem>>(app.get(request.data).toString())
-
-            val searchResponses: List<SearchResponse> = res?.map { it.toSearchResponse() }
-                ?: throw ErrorLoadingException("Invalid JSON response")
-            Log.d("veex", "searchResponses: $searchResponses")
-            val homePage = newHomePageResponse(
-                request, searchResponses
-            )
-            Log.d("veex", "homePage: $homePage")
-            return homePage
-        }.getOrElse {
-            Log.e("veex", "error: $it")
-            throw it
-        }
+        val res = tryParseJson<List<MovieItem>>(app.get(request.data).toString())
+        val searchResponses: List<SearchResponse> = res?.map { it.toSearchResponse() }
+            ?: throw ErrorLoadingException("Invalid JSON response")
+        return newHomePageResponse(
+            request.name, searchResponses
+        )
     }
 
     private fun MovieItem.toSearchResponse(): SearchResponse {
-        val movieSearchResponse = newMovieSearchResponse(
+        return newMovieSearchResponse(
             title,
             id.toString(),
-            TvType.Movie
+            getType(type)
         ) {
-            this.posterUrl = cover
+            this.posterUrl = image
         }
-        Log.d("veex", "movieSearchResponse: $movieSearchResponse")
-        return movieSearchResponse
+    }
+
+    private fun getType(type: String): TvType {
+        if (type == "movie") return TvType.Movie
+        if (type == "serie") return TvType.TvSeries
+        return TvType.Others
     }
 
     companion object {
