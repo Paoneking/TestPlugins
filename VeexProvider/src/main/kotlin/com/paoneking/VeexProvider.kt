@@ -40,9 +40,11 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
     private fun MovieItem.toSearchResponse(): SearchResponse {
         return newMovieSearchResponse(
             title,
-            image,
+            id.toString(),
             TvType.Movie
-        )
+        ) {
+            this.posterUrl = cover
+        }
     }
 
     companion object {
