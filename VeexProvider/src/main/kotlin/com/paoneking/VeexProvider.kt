@@ -28,16 +28,21 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        Log.d("veex", "getMainPage")
-        val res = app.get(request.data).parsedSafe<List<MovieItem>>()
-        val searchResponses: List<SearchResponse> = res?.map { it.toSearchResponse() }
-            ?: throw ErrorLoadingException("Invalid JSON response")
-        Log.d("veex", "searchResponses: $searchResponses")
-        val homePage =  newHomePageResponse(
-            request, searchResponses
-        )
-        Log.d("veex", "homePage: $homePage")
-        return homePage
+        runCatching {
+            Log.d("veex", "getMainPage")
+            val res = app.get(request.data).parsedSafe<List<MovieItem>>()
+            val searchResponses: List<SearchResponse> = res?.map { it.toSearchResponse() }
+                ?: throw ErrorLoadingException("Invalid JSON response")
+            Log.d("veex", "searchResponses: $searchResponses")
+            val homePage =  newHomePageResponse(
+                request, searchResponses
+            )
+            Log.d("veex", "homePage: $homePage")
+            return homePage
+        }.getOrElse {
+            Log.e("veex", "error: $it")
+            throw it
+        }
     }
 
     private fun MovieItem.toSearchResponse(): SearchResponse {
