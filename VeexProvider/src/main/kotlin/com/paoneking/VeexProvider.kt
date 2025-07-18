@@ -1,8 +1,10 @@
 package com.paoneking
 
+import com.lagradost.api.Log
 import com.lagradost.cloudstream3.ErrorLoadingException
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
+import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
 import com.lagradost.cloudstream3.SearchResponse
@@ -12,6 +14,7 @@ import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
+import com.lagradost.cloudstream3.syncproviders.SyncIdName
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.paoneking.VeexProvider.Companion.FIRST_URL
 import kotlinx.coroutines.runBlocking
@@ -77,6 +80,11 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
         return res?.posters?.map {
             it.toSearchResponse()
         }
+    }
+
+    override suspend fun load(url: String): LoadResponse? {
+        Log.d("veex", "loadUrl: $url")
+        return super.load(url)
     }
 
     private fun MovieItem.toSearchResponse(): SearchResponse {
