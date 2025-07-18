@@ -55,12 +55,12 @@ data class Trailer(
 
 data class Source(
     val id: Int,
-    val title: String,
+    val title: String?,
     val quality: String?,
     val size: String?,
-    val kind: String,
+    val kind: String?,
     val premium: String?,
-    val external: Boolean,
+    val external: Boolean?,
     val type: String,
     val url: String
 )

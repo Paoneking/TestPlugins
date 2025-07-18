@@ -19,6 +19,7 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
+import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
@@ -67,7 +68,7 @@ class VeexPrimeProvider : MainAPI() { // all providers must be an instance of Ma
             }
 
             else -> {
-                val res = tryParseJson<List<MovieItem>>(app.get(request.data).toString())
+                val res = parseJson<List<MovieItem>>(app.get(request.data).toString())
                 res?.map { it.toSearchResponse() }
                     ?: throw ErrorLoadingException("Invalid JSON response")
             }
@@ -154,7 +155,7 @@ class VeexPrimeProvider : MainAPI() { // all providers must be an instance of Ma
         val sources = movieItem.sources
         val source = sources?.first()
         if (source != null) {
-            callback.invoke(newExtractorLink(source.title, source.title, source.url){
+            callback.invoke(newExtractorLink("HD", "HD", source.url){
                 this.quality = Qualities.P1080.value
                 this.type = ExtractorLinkType.M3U8
             })
@@ -218,17 +219,15 @@ class VeexPrimeProvider : MainAPI() { // all providers must be an instance of Ma
 
 fun main() = runBlocking {
     val veexProvider = VeexPrimeProvider()
-    val ss = veexProvider.getMainPage(
-        1,
-        MainPageRequest(
-            "Movies",
-            FIRST_URL,
-            false
+    veexProvider.mainPage.forEach {
+        val ss = veexProvider.getMainPage(
+            1,
+            MainPageRequest(
+                it.name,
+                it.data,
+                false
+            )
         )
-    )
-   /* val json = """
-        {"id":4265,"type":"serie","title":"Squid Game","label":null,"sublabel":null,"description":"Hundreds of cash-strapped players accept a strange invitation to compete in children's games. Inside, a tempting prize awaits — with deadly high stakes.","year":2021,"imdb":7.862,"comment":true,"rating":0,"duration":"3 Seasons","downloadas":"1","playas":"1","classification":null,"image":"https://netflix.veex.cc/uploads/cache/poster_thumb/uploads/jpg/960c8422ffd42361cfdf07f427b4ab12.jpg","cover":"https://netflix.veex.cc/uploads/cache/cover_thumb/uploads/jpg/cb061fb71e28cf56fc0d6a73cfcc62c4.jpg","genres":[{"id":2,"title":"Drama"},{"id":13,"title":"Mystery"},{"id":20,"title":"Action & Adventure"},{"id":28,"title":"New on Netflix"}],"trailer":{"id":14768,"type":"youtube","url":"https://www.youtube.com/watch?v=oqxAJKy0ii4"},"sources":[]}
-    """.trimIndent()
-    val ss = veexProvider.load(json)*/
-    println("ss: $ss")
+        println("ss: $ss")
+    }
 }

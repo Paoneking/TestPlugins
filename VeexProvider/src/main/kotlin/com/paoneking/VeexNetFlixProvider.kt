@@ -154,7 +154,7 @@ class VeexNetFlixProvider : MainAPI() { // all providers must be an instance of 
         val sources = movieItem.sources
         val source = sources?.first()
         if (source != null) {
-            callback.invoke(newExtractorLink(source.title, source.title, source.url){
+            callback.invoke(newExtractorLink("HD", "HD", source.url){
                 this.quality = Qualities.P1080.value
                 this.type = ExtractorLinkType.M3U8
             })
