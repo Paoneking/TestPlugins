@@ -8,6 +8,7 @@ class VeexPlugin : Plugin() {
 
     override fun load() {
         // All providers should be added in this manner
-        registerMainAPI(VeexProvider())
+        registerMainAPI(VeexNetFlixProvider())
+        registerMainAPI(VeexPrimeProvider())
     }
 }

@@ -27,8 +27,8 @@ import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import kotlinx.coroutines.runBlocking
 
-class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var name = "Veex Netflix"
+class VeexPrimeProvider : MainAPI() { // all providers must be an instance of MainAPI
+    override var name = "Veex Prime"
     override val hasMainPage = true
     override var lang = "ne"
     override val instantLinkLoading = true
@@ -208,7 +208,7 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
 
     companion object {
         const val ID = "4F5A9C3D9A86FA54EACEDDD635185/26a3547f-6db2-44f3-b4c8-3b8dcf1e871a/"
-        const val BASE_URL = "https://netflix.veex.cc/api"
+        const val BASE_URL = "https://prime.veex.cc/api"
         const val MAIN_PAGE_URL = "$BASE_URL/%s/by/filtres/%d/created/0/$ID"
         const val SEARCH_URL = "$BASE_URL/search/%s/$ID"
         const val FIRST_URL = "$BASE_URL/first/$ID"
@@ -217,7 +217,7 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
 }
 
 fun main() = runBlocking {
-    val veexProvider = VeexProvider()
+    val veexProvider = VeexPrimeProvider()
     /*val ss = veexProvider.getMainPage(
         1,
         MainPageRequest(
