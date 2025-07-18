@@ -1,6 +1,7 @@
 package com.paoneking
 
 import com.lagradost.cloudstream3.ErrorLoadingException
+import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
@@ -12,7 +13,7 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
-import com.paoneking.VeexProvider.Companion.MAIN_PAGE_URL
+import com.paoneking.VeexProvider.Companion.FIRST_URL
 import kotlinx.coroutines.runBlocking
 
 class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
@@ -37,9 +38,12 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
+        println("request: $request")
         val searchResponses: List<SearchResponse>? = when (request.data) {
             FIRST_URL -> {
+                println("req")
                 val res = app.get(request.data).parsedSafe<FirstApiResponse>()
+                println("res: $res")
                 res?.slides?.map { it.toSearchResponse() }
                 /*val firstResponses = res?.genre?.map {
                     HomePageList(it.title ?: "", it.posters.map {
@@ -57,7 +61,7 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
         }
         return searchResponses?.let {
             newHomePageResponse(
-                request.name, it, false
+                HomePageList(request.name, it, false)
             )
         } ?: run {
             newHomePageResponse(
@@ -137,7 +141,7 @@ fun main() = runBlocking {
         1,
         MainPageRequest(
             "Movies",
-            MAIN_PAGE_URL.format("movie", 0),
+            FIRST_URL,
             false
         )
     )
