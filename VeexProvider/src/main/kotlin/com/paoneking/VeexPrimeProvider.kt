@@ -25,6 +25,7 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.newExtractorLink
+import com.paoneking.VeexPrimeProvider.Companion.FIRST_URL
 import kotlinx.coroutines.runBlocking
 
 class VeexPrimeProvider : MainAPI() { // all providers must be an instance of MainAPI
@@ -52,8 +53,7 @@ class VeexPrimeProvider : MainAPI() { // all providers must be an instance of Ma
         println("request: $request")
         val searchResponses: List<SearchResponse>? = when (request.data) {
             FIRST_URL -> {
-                println("req")
-                val res = app.get(request.data).parsedSafe<FirstApiResponse>()
+                val res = app.get(request.data).parsed<FirstApiResponse>()
                 println("res: $res")
                 val searchReasponse = res?.slides?.map { it.poster.toSearchResponse() }
                 println("searchReasponse: $searchReasponse")
@@ -154,7 +154,7 @@ class VeexPrimeProvider : MainAPI() { // all providers must be an instance of Ma
         val sources = movieItem.sources
         val source = sources?.first()
         if (source != null) {
-            callback.invoke(newExtractorLink(source.title, source.quality, source.url){
+            callback.invoke(newExtractorLink(source.title, source.title, source.url){
                 this.quality = Qualities.P1080.value
                 this.type = ExtractorLinkType.M3U8
             })
@@ -218,17 +218,17 @@ class VeexPrimeProvider : MainAPI() { // all providers must be an instance of Ma
 
 fun main() = runBlocking {
     val veexProvider = VeexPrimeProvider()
-    /*val ss = veexProvider.getMainPage(
+    val ss = veexProvider.getMainPage(
         1,
         MainPageRequest(
             "Movies",
             FIRST_URL,
             false
         )
-    )*/
-    val json = """
+    )
+   /* val json = """
         {"id":4265,"type":"serie","title":"Squid Game","label":null,"sublabel":null,"description":"Hundreds of cash-strapped players accept a strange invitation to compete in children's games. Inside, a tempting prize awaits — with deadly high stakes.","year":2021,"imdb":7.862,"comment":true,"rating":0,"duration":"3 Seasons","downloadas":"1","playas":"1","classification":null,"image":"https://netflix.veex.cc/uploads/cache/poster_thumb/uploads/jpg/960c8422ffd42361cfdf07f427b4ab12.jpg","cover":"https://netflix.veex.cc/uploads/cache/cover_thumb/uploads/jpg/cb061fb71e28cf56fc0d6a73cfcc62c4.jpg","genres":[{"id":2,"title":"Drama"},{"id":13,"title":"Mystery"},{"id":20,"title":"Action & Adventure"},{"id":28,"title":"New on Netflix"}],"trailer":{"id":14768,"type":"youtube","url":"https://www.youtube.com/watch?v=oqxAJKy0ii4"},"sources":[]}
     """.trimIndent()
-    val ss = veexProvider.load(json)
+    val ss = veexProvider.load(json)*/
     println("ss: $ss")
 }
