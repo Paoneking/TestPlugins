@@ -1,5 +1,14 @@
 package com.paoneking
 
+data class ApiResponse(
+    val channels: List<Any>?,
+    val posters: List<MovieItem>
+)
+
+data class FirstApiResponse(
+    val channels: List<Any>?,
+    val slides: List<MovieItem>
+)
 
 data class MovieItem(
     val id: Int,

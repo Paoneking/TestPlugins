@@ -10,7 +10,9 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
+import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
+import com.paoneking.VeexProvider.Companion.MAIN_PAGE_URL
 import kotlinx.coroutines.runBlocking
 
 class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
@@ -24,20 +26,77 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
     )
 
     override val mainPage = mainPageOf(
-        BASE_URL.format("movie") to "Movies",
-        BASE_URL.format("serie") to "Series",
+        FIRST_URL to "Home",
+        MAIN_PAGE_URL.format("movie", 0) to "Movies",
+        MAIN_PAGE_URL.format("serie", 0) to "Series",
+        *genreMap.map { (id, name) ->
+            MAIN_PAGE_URL.format("movie", id) to name
+            MAIN_PAGE_URL.format("serie", id) to name
+        }.toTypedArray()
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val res = tryParseJson<List<MovieItem>>(app.get(request.data).toString())
-        val searchResponses: List<SearchResponse> = res?.map { it.toSearchResponse() }
-            ?: throw ErrorLoadingException("Invalid JSON response")
-        return newHomePageResponse(
-            request.name, searchResponses
-        )
+        val searchResponses: List<SearchResponse>? = when(request.data) {
+            FIRST_URL -> {
+                val res = app.get(request.data).parsedSafe<FirstApiResponse>()
+                res?.slides?.map { it.toSearchResponse() }
+            }
+
+            else -> {
+                val res = tryParseJson<List<MovieItem>>(app.get(request.data).toString())
+                res?.map { it.toSearchResponse() }
+                    ?: throw ErrorLoadingException("Invalid JSON response")
+            }
+        }
+        return searchResponses?.let {
+            newHomePageResponse(
+                request.name, it, true
+            )
+        } ?: run {
+            newHomePageResponse(
+                request.name, emptyList(), true
+            )
+        }
+    }
+
+    override suspend fun search(query: String): List<SearchResponse>? {
+        val res = app.get(SEARCH_URL.format(query)).parsedSafe<ApiResponse>()
+        return res?.posters?.map {
+            it.toSearchResponse()
+        }
     }
 
     private fun MovieItem.toSearchResponse(): SearchResponse {
+        val title = "$title"
+        val url = id.toString()
+        when (val tvType = getType(type)) {
+            TvType.Movie -> newMovieSearchResponse(
+                title,
+                url,
+                tvType
+            ) {
+                this.posterUrl = image
+                this.year = this@toSearchResponse.year
+            }
+
+            TvType.TvSeries -> newTvSeriesSearchResponse(
+                title,
+                url,
+                tvType
+            ) {
+                this.posterUrl = image
+                this.year = this@toSearchResponse.year
+            }
+
+            else -> newMovieSearchResponse(
+                title,
+                url,
+                tvType
+            ) {
+                this.posterUrl = image
+                this.year = this@toSearchResponse.year
+            }
+        }
         return newMovieSearchResponse(
             "$title ($year)",
             id.toString(),
@@ -55,8 +114,11 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
     }
 
     companion object {
-        const val BASE_URL =
-            "https://netflix.veex.cc/api/%s/by/filtres/0/created/0/4F5A9C3D9A86FA54EACEDDD635185/26a3547f-6db2-44f3-b4c8-3b8dcf1e871a/"
+        const val ID = "4F5A9C3D9A86FA54EACEDDD635185/26a3547f-6db2-44f3-b4c8-3b8dcf1e871a/"
+        const val BASE_URL = "https://netflix.veex.cc/api"
+        const val MAIN_PAGE_URL = "$BASE_URL/%s/by/filtres/%d/created/0/$ID"
+        const val SEARCH_URL = "$BASE_URL/search/%s/$ID"
+        const val FIRST_URL = "$BASE_URL/first/$ID"
     }
 }
 
@@ -66,9 +128,10 @@ fun main() = runBlocking {
         1,
         MainPageRequest(
             "Movies",
-            "https://netflix.veex.cc/api/movie/by/filtres/0/created/0/4F5A9C3D9A86FA54EACEDDD635185/26a3547f-6db2-44f3-b4c8-3b8dcf1e871a/",
+            MAIN_PAGE_URL.format("movie", 0),
             false
         )
     )
+//    val ss = veexProvider.search("squid")
     println("ss: $ss")
 }

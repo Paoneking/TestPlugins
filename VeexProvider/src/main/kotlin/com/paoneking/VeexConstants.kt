@@ -1,0 +1,31 @@
+package com.paoneking
+
+val genreMap = mapOf(
+    28 to "New on Netflix",
+    1 to "Horror",
+    2 to "Drama",
+    3 to "Documentary",
+    4 to "Comedy",
+    5 to "Romance",
+    6 to "Action",
+    7 to "Adventure",
+    8 to "Fantasy",
+    9 to "Music",
+    10 to "History",
+    11 to "Thriller",
+    12 to "Crime",
+    13 to "Mystery",
+    14 to "Family",
+    15 to "Animation",
+    16 to "Science Fiction",
+    17 to "War",
+    18 to "TV Movie",
+    19 to "Sci-Fi & Fantasy",
+    20 to "Action & Adventure",
+    21 to "Reality",
+    22 to "Talk",
+    23 to "Western",
+    24 to "War & Politics",
+    26 to "Kids",
+    27 to "K- Drama"
+)
