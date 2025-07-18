@@ -22,6 +22,9 @@ import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
+import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import kotlinx.coroutines.runBlocking
 
 class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
@@ -147,7 +150,17 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         Log.d("veex", "loadLinks data: $data")
-        return super.loadLinks(data, isCasting, subtitleCallback, callback)
+        val movieItem: MovieItem = tryParseJson<MovieItem>(data)!!
+        val sources = movieItem.sources
+        val source = sources?.first()
+        if (source != null) {
+            callback.invoke(newExtractorLink(source.title, source.quality, source.url){
+                this.quality = Qualities.P1080.value
+                this.type = ExtractorLinkType.M3U8
+            })
+            return  true
+        }
+        return false
     }
 
     private fun MovieItem.toSearchResponse(): SearchResponse {
