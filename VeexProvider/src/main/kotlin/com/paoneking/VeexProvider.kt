@@ -19,7 +19,8 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var name = "Veex Netflix"
     override val hasMainPage = true
     override var lang = "ne"
-    override val hasDownloadSupport = true
+    override val instantLinkLoading = true
+    override val hasQuickSearch = true
     override val supportedTypes = setOf(
         TvType.Movie,
         TvType.TvSeries
@@ -36,10 +37,16 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val searchResponses: List<SearchResponse>? = when(request.data) {
+        val searchResponses: List<SearchResponse>? = when (request.data) {
             FIRST_URL -> {
                 val res = app.get(request.data).parsedSafe<FirstApiResponse>()
                 res?.slides?.map { it.toSearchResponse() }
+                /*val firstResponses = res?.genre?.map {
+                    HomePageList(it.title ?: "", it.posters.map {
+                        it.toSearchResponse()
+                    }, false)
+                }
+                return newHomePageResponse(HomePageList(request.name, firstResponses), false)*/
             }
 
             else -> {
@@ -50,14 +57,16 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
         }
         return searchResponses?.let {
             newHomePageResponse(
-                request.name, it, true
+                request.name, it, false
             )
         } ?: run {
             newHomePageResponse(
-                request.name, emptyList(), true
+                request.name, emptyList(), false
             )
         }
     }
+
+    override suspend fun quickSearch(query: String) = search(query)
 
     override suspend fun search(query: String): List<SearchResponse>? {
         val res = app.get(SEARCH_URL.format(query)).parsedSafe<ApiResponse>()
