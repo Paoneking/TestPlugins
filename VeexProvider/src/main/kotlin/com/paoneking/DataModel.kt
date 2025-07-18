@@ -1,19 +1,28 @@
 package com.paoneking
 
 data class ApiResponse(
-    val posters: List<MovieItem>,
+    val posters: List<MovieItem>?,
+    val episodes: List<MovieItem>?,
     val id: Int?,
     val title: String?,
 )
 
 data class FirstApiResponse(
-    val slides: List<MovieItem>,
+    val slides: List<Slide>,
     val genres: List<ApiResponse>
+)
+
+data class Slide(
+    val id: Int,
+    val title: String?,
+    val type: String?,
+    val image: String?,
+    val poster: MovieItem
 )
 
 data class MovieItem(
     val id: Int,
-    val type: String,
+    val type: String?,
     val title: String,
     val label: String?,
     val sublabel: String?,
