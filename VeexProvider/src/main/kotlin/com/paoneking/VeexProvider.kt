@@ -118,7 +118,7 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
                             this.name = episode.title
                             this.episode = episodeNum
                             this.season = seasonNum
-                            this.posterUrl = episode.image
+                            this.posterUrl = episode.cover
                         }
                     }
                 }
@@ -128,7 +128,7 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
                     TvType.TvSeries,
                     episodes?.flatten() ?: emptyList()
                 ) {
-                    this.posterUrl = movieItem.image
+                    this.posterUrl = movieItem.cover
                     this.year = movieItem.year
                     this.plot = movieItem.description
                     this.tags = movieItem.genres?.map { it.title }
