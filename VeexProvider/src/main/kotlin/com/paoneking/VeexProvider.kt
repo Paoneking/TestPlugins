@@ -1,8 +1,5 @@
 package com.paoneking
 
-import android.net.Uri
-import androidx.navigation.R.attr.data
-import androidx.navigation.common.R.attr.uri
 import com.lagradost.api.Log
 import com.lagradost.cloudstream3.ErrorLoadingException
 import com.lagradost.cloudstream3.HomePageList
@@ -11,10 +8,8 @@ import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
-import com.lagradost.cloudstream3.R.string.episode
-import com.lagradost.cloudstream3.R.string.season
-import com.lagradost.cloudstream3.R.string.trailer
 import com.lagradost.cloudstream3.SearchResponse
+import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
@@ -26,7 +21,7 @@ import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
-import com.paoneking.VeexProvider.Companion.FIRST_URL
+import com.lagradost.cloudstream3.utils.ExtractorLink
 import kotlinx.coroutines.runBlocking
 
 class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
@@ -96,7 +91,7 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
 
     override suspend fun load(url: String): LoadResponse? {
         val movieItem: MovieItem = tryParseJson<MovieItem>(url)!!
-        return when(val type = getType(movieItem.type)) {
+        return when (val type = getType(movieItem.type)) {
             TvType.Movie -> {
                 newMovieLoadResponse(movieItem.title, url, type, movieItem) {
                     this.posterUrl = movieItem.image
@@ -107,8 +102,11 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
                     addTrailer(movieItem.trailer?.url)
                 }
             }
+
             TvType.TvSeries -> {
-                val res = tryParseJson<List<ApiResponse>>(app.get(SERIES_URL.format(movieItem.id)).toString())
+                val res = tryParseJson<List<ApiResponse>>(
+                    app.get(SERIES_URL.format(movieItem.id)).toString()
+                )
                 val episodes = res?.mapIndexed { index, season ->
                     val seasonNum = index + 1
                     season.episodes!!.mapIndexed { index1, episode ->
@@ -121,7 +119,12 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
                         }
                     }
                 }
-                newTvSeriesLoadResponse(movieItem.title, url, TvType.TvSeries, episodes?.flatten() ?: emptyList()) {
+                newTvSeriesLoadResponse(
+                    movieItem.title,
+                    url,
+                    TvType.TvSeries,
+                    episodes?.flatten() ?: emptyList()
+                ) {
                     this.posterUrl = movieItem.image
                     this.year = movieItem.year
                     this.plot = movieItem.description
@@ -130,10 +133,21 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
                     addTrailer(movieItem.trailer?.url)
                 }
             }
+
             else -> {
                 null
             }
         }
+    }
+
+    override suspend fun loadLinks(
+        data: String,
+        isCasting: Boolean,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
+        Log.d("veex", "loadLinks data: $data")
+        return super.loadLinks(data, isCasting, subtitleCallback, callback)
     }
 
     private fun MovieItem.toSearchResponse(): SearchResponse {
@@ -191,14 +205,14 @@ class VeexProvider : MainAPI() { // all providers must be an instance of MainAPI
 
 fun main() = runBlocking {
     val veexProvider = VeexProvider()
-     /*val ss = veexProvider.getMainPage(
-         1,
-         MainPageRequest(
-             "Movies",
-             FIRST_URL,
-             false
-         )
-     )*/
+    /*val ss = veexProvider.getMainPage(
+        1,
+        MainPageRequest(
+            "Movies",
+            FIRST_URL,
+            false
+        )
+    )*/
     val json = """
         {"id":4265,"type":"serie","title":"Squid Game","label":null,"sublabel":null,"description":"Hundreds of cash-strapped players accept a strange invitation to compete in children's games. Inside, a tempting prize awaits — with deadly high stakes.","year":2021,"imdb":7.862,"comment":true,"rating":0,"duration":"3 Seasons","downloadas":"1","playas":"1","classification":null,"image":"https://netflix.veex.cc/uploads/cache/poster_thumb/uploads/jpg/960c8422ffd42361cfdf07f427b4ab12.jpg","cover":"https://netflix.veex.cc/uploads/cache/cover_thumb/uploads/jpg/cb061fb71e28cf56fc0d6a73cfcc62c4.jpg","genres":[{"id":2,"title":"Drama"},{"id":13,"title":"Mystery"},{"id":20,"title":"Action & Adventure"},{"id":28,"title":"New on Netflix"}],"trailer":{"id":14768,"type":"youtube","url":"https://www.youtube.com/watch?v=oqxAJKy0ii4"},"sources":[]}
     """.trimIndent()
