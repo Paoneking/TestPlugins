@@ -50,10 +50,6 @@ abstract class VeexProvider(val domain: String) : MainAPI() { // all providers m
         firstUrl to "Home",
         mainPageUrl.format("movie", 0) to "Movies",
         mainPageUrl.format("serie", 0) to "Series",
-        /**genreMap.map { (id, name) ->
-            mainPageUrl.format("movie", id) to name
-            mainPageUrl.format("serie", id) to name
-        }.toTypedArray()*/
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -165,7 +161,7 @@ abstract class VeexProvider(val domain: String) : MainAPI() { // all providers m
     }
 
     private fun MovieItem.toSearchResponse(): SearchResponse {
-        val title = title
+        val title = "$title ($year)"
         val url = this.toJson()
         return when (val tvType = getType(type)) {
             TvType.Movie -> newMovieSearchResponse(
