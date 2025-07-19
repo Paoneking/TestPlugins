@@ -19,6 +19,7 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
+import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
@@ -49,42 +50,37 @@ abstract class VeexProvider(val domain: String) : MainAPI() { // all providers m
         firstUrl to "Home",
         mainPageUrl.format("movie", 0) to "Movies",
         mainPageUrl.format("serie", 0) to "Series",
-        *genreMap.map { (id, name) ->
+        /**genreMap.map { (id, name) ->
             mainPageUrl.format("movie", id) to name
             mainPageUrl.format("serie", id) to name
-        }.toTypedArray()
+        }.toTypedArray()*/
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         println("request: $request")
-        val searchResponses: List<SearchResponse>? = when (request.data) {
+        when (request.data) {
             firstUrl -> {
-                val res = app.get(request.data).parsedSafe<FirstApiResponse>()
-                val searchReasponse = res?.slides?.map { it.poster.toSearchResponse() }
-                searchReasponse
-                /*val firstResponses = res?.genre?.map {
-                    HomePageList(it.title ?: "", it.posters.map {
-                        it.toSearchResponse()
-                    }, false)
+                val res = app.get(request.data).parsed<FirstApiResponse>()
+                val homePageLists = res.genres.map {
+                    val searchResponse = it.posters?.map { movieItem ->
+                        movieItem.toSearchResponse()
+                    }
+                    HomePageList(it.title ?: "", searchResponse!!)
                 }
-                return newHomePageResponse(HomePageList(request.name, firstResponses), false)*/
+                val homePageResponse =  newHomePageResponse(homePageLists, false)
+                println("homePageResponse: $homePageResponse")
+                return homePageResponse
             }
 
             else -> {
-                val res = tryParseJson<List<MovieItem>>(app.get(request.data).toString())
-                res?.map { it.toSearchResponse() }
-                    ?: throw ErrorLoadingException("Invalid JSON response")
+                val res = parseJson<List<MovieItem>>(app.get(request.data).toString())
+                val searchResponses = res.map { it.toSearchResponse() }
+                val homePageResponse = newHomePageResponse(
+                    HomePageList(request.name, searchResponses, false), hasNext = false
+                )
+                println("homePageResponse: $homePageResponse")
+                return homePageResponse
             }
-        }
-        println("searchReasponses: $searchResponses")
-        return searchResponses?.let {
-            newHomePageResponse(
-                HomePageList(request.name, it, false), hasNext = false
-            )
-        } ?: run {
-            newHomePageResponse(
-                request.name, emptyList(), false
-            )
         }
     }
 
