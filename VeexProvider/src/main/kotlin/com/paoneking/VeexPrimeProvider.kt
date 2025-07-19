@@ -1,3 +1,4 @@
+/*
 package com.paoneking
 
 import com.lagradost.api.Log
@@ -59,12 +60,14 @@ class VeexPrimeProvider : MainAPI() { // all providers must be an instance of Ma
                 val searchReasponse = res?.slides?.map { it.poster.toSearchResponse() }
                 println("searchReasponse: $searchReasponse")
                 searchReasponse
-                /*val firstResponses = res?.genre?.map {
+                */
+/*val firstResponses = res?.genre?.map {
                     HomePageList(it.title ?: "", it.posters.map {
                         it.toSearchResponse()
                     }, false)
                 }
-                return newHomePageResponse(HomePageList(request.name, firstResponses), false)*/
+                return newHomePageResponse(HomePageList(request.name, firstResponses), false)*//*
+
             }
 
             else -> {
@@ -230,4 +233,4 @@ fun main() = runBlocking {
         )
         println("ss: $ss")
     }
-}
+}*/

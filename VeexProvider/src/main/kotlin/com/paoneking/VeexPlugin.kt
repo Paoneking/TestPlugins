@@ -10,5 +10,8 @@ class VeexPlugin : Plugin() {
         // All providers should be added in this manner
         registerMainAPI(VeexNetFlixProvider())
         registerMainAPI(VeexPrimeProvider())
+        registerMainAPI(VeexZee5Provider())
+        registerMainAPI(VeexHotstarProvider())
+        registerMainAPI(VeexSonyLivProvider())
     }
 }

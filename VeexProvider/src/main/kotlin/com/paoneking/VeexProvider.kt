@@ -1,4 +1,3 @@
-/*
 package com.paoneking
 
 import com.lagradost.api.Log
@@ -28,8 +27,8 @@ import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import kotlinx.coroutines.runBlocking
 
-class VeexNetFlixProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var name = "Veex Netflix"
+abstract class VeexProvider(val domain: String) : MainAPI() { // all providers must be an instance of MainAPI
+    abstract override var name:String
     override val hasMainPage = true
     override var lang = "ne"
     override val instantLinkLoading = true
@@ -39,34 +38,36 @@ class VeexNetFlixProvider : MainAPI() { // all providers must be an instance of 
         TvType.TvSeries
     )
 
+    private val baseUrl = "https://$domain.veex.cc/api"
+    private val urlId = "4F5A9C3D9A86FA54EACEDDD635185/26a3547f-6db2-44f3-b4c8-3b8dcf1e871a/"
+    private val mainPageUrl = "$baseUrl/%s/by/filtres/%d/created/0/$urlId"
+    private val searchUrl = "$baseUrl/search/%s/$urlId"
+    private val firstUrl = "$baseUrl/first/$urlId"
+    private val seriesUrl = "$baseUrl/season/by/serie/%s/$urlId"
+
     override val mainPage = mainPageOf(
-        FIRST_URL to "Home",
-        MAIN_PAGE_URL.format("movie", 0) to "Movies",
-        MAIN_PAGE_URL.format("serie", 0) to "Series",
+        firstUrl to "Home",
+        mainPageUrl.format("movie", 0) to "Movies",
+        mainPageUrl.format("serie", 0) to "Series",
         *genreMap.map { (id, name) ->
-            MAIN_PAGE_URL.format("movie", id) to name
-            MAIN_PAGE_URL.format("serie", id) to name
+            mainPageUrl.format("movie", id) to name
+            mainPageUrl.format("serie", id) to name
         }.toTypedArray()
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         println("request: $request")
         val searchResponses: List<SearchResponse>? = when (request.data) {
-            FIRST_URL -> {
-                println("req")
+            firstUrl -> {
                 val res = app.get(request.data).parsedSafe<FirstApiResponse>()
-                println("res: $res")
                 val searchReasponse = res?.slides?.map { it.poster.toSearchResponse() }
-                println("searchReasponse: $searchReasponse")
                 searchReasponse
-                */
-/*val firstResponses = res?.genre?.map {
+                /*val firstResponses = res?.genre?.map {
                     HomePageList(it.title ?: "", it.posters.map {
                         it.toSearchResponse()
                     }, false)
                 }
-                return newHomePageResponse(HomePageList(request.name, firstResponses), false)*//*
-
+                return newHomePageResponse(HomePageList(request.name, firstResponses), false)*/
             }
 
             else -> {
@@ -75,6 +76,7 @@ class VeexNetFlixProvider : MainAPI() { // all providers must be an instance of 
                     ?: throw ErrorLoadingException("Invalid JSON response")
             }
         }
+        println("searchReasponses: $searchResponses")
         return searchResponses?.let {
             newHomePageResponse(
                 HomePageList(request.name, it, false), hasNext = false
@@ -89,7 +91,7 @@ class VeexNetFlixProvider : MainAPI() { // all providers must be an instance of 
     override suspend fun quickSearch(query: String) = search(query)
 
     override suspend fun search(query: String): List<SearchResponse>? {
-        val res = app.get(SEARCH_URL.format(query)).parsedSafe<ApiResponse>()
+        val res = app.get(searchUrl.format(query)).parsedSafe<ApiResponse>()
         return res?.posters?.map {
             it.toSearchResponse()
         }
@@ -111,7 +113,7 @@ class VeexNetFlixProvider : MainAPI() { // all providers must be an instance of 
 
             TvType.TvSeries -> {
                 val res = tryParseJson<List<ApiResponse>>(
-                    app.get(SERIES_URL.format(movieItem.id)).toString()
+                    app.get(seriesUrl.format(movieItem.id)).toString()
                 )
                 val episodes = res?.mapIndexed { index, season ->
                     val seasonNum = index + 1
@@ -207,32 +209,4 @@ class VeexNetFlixProvider : MainAPI() { // all providers must be an instance of 
         if (type == "serie") return TvType.TvSeries
         return TvType.Others
     }
-
-    companion object {
-        const val ID = "4F5A9C3D9A86FA54EACEDDD635185/26a3547f-6db2-44f3-b4c8-3b8dcf1e871a/"
-        const val BASE_URL = "https://netflix.veex.cc/api"
-        const val MAIN_PAGE_URL = "$BASE_URL/%s/by/filtres/%d/created/0/$ID"
-        const val SEARCH_URL = "$BASE_URL/search/%s/$ID"
-        const val FIRST_URL = "$BASE_URL/first/$ID"
-        const val SERIES_URL = "$BASE_URL/season/by/serie/%s/$ID"
-    }
 }
-
-fun main() = runBlocking {
-    val veexProvider = VeexNetFlixProvider()
-    */
-/*val ss = veexProvider.getMainPage(
-        1,
-        MainPageRequest(
-            "Movies",
-            FIRST_URL,
-            false
-        )
-    )*//*
-
-    val json = """
-        {"id":4265,"type":"serie","title":"Squid Game","label":null,"sublabel":null,"description":"Hundreds of cash-strapped players accept a strange invitation to compete in children's games. Inside, a tempting prize awaits — with deadly high stakes.","year":2021,"imdb":7.862,"comment":true,"rating":0,"duration":"3 Seasons","downloadas":"1","playas":"1","classification":null,"image":"https://netflix.veex.cc/uploads/cache/poster_thumb/uploads/jpg/960c8422ffd42361cfdf07f427b4ab12.jpg","cover":"https://netflix.veex.cc/uploads/cache/cover_thumb/uploads/jpg/cb061fb71e28cf56fc0d6a73cfcc62c4.jpg","genres":[{"id":2,"title":"Drama"},{"id":13,"title":"Mystery"},{"id":20,"title":"Action & Adventure"},{"id":28,"title":"New on Netflix"}],"trailer":{"id":14768,"type":"youtube","url":"https://www.youtube.com/watch?v=oqxAJKy0ii4"},"sources":[]}
-    """.trimIndent()
-    val ss = veexProvider.load(json)
-    println("ss: $ss")
-}*/
