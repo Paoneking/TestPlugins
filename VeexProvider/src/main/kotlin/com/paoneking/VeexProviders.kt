@@ -1,6 +1,9 @@
 package com.paoneking
 
 import com.lagradost.cloudstream3.MainPageRequest
+import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.utils.AppUtils.parseJson
+import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import kotlinx.coroutines.runBlocking
 
 class VeexZee5Provider: VeexProvider("zee5") {
@@ -24,8 +27,13 @@ class VeexSonyLivProvider: VeexProvider("sonyliv") {
 }
 
 fun main() = runBlocking {
+    val playlistUrl = "https://live9.veex.cc/A-Brother-And-7-Siblings-TT32881480-2025/file-Transcode/playlist.m3u8"
+
     val veexProvider = VeexSonyLivProvider()
-    veexProvider.mainPage.forEach {
+    veexProvider.invokeSubtitles(playlistUrl) {
+        println("lang: ${it.lang}, url: ${it.url}")
+    }
+    /*veexProvider.mainPage.forEach {
         val ss = veexProvider.getMainPage(
             1,
             MainPageRequest(
@@ -35,5 +43,5 @@ fun main() = runBlocking {
             )
         )
         println("ss: $ss")
-    }
+    }*/
 }

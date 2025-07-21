@@ -1,7 +1,6 @@
 package com.paoneking
 
 import com.lagradost.api.Log
-import com.lagradost.cloudstream3.ErrorLoadingException
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
@@ -19,6 +18,7 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
+import com.lagradost.cloudstream3.runAllAsync
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
@@ -26,10 +26,10 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.newExtractorLink
-import kotlinx.coroutines.runBlocking
 
-abstract class VeexProvider(val domain: String) : MainAPI() { // all providers must be an instance of MainAPI
-    abstract override var name:String
+abstract class VeexProvider(domain: String) :
+    MainAPI() { // all providers must be an instance of MainAPI
+    abstract override var name: String
     override val hasMainPage = true
     override var lang = "ne"
     override val instantLinkLoading = true
@@ -63,7 +63,7 @@ abstract class VeexProvider(val domain: String) : MainAPI() { // all providers m
                     }
                     HomePageList(it.title ?: "", searchResponse!!)
                 }
-                val homePageResponse =  newHomePageResponse(homePageLists, false)
+                val homePageResponse = newHomePageResponse(homePageLists, false)
                 println("homePageResponse: $homePageResponse")
                 return homePageResponse
             }
@@ -151,13 +151,38 @@ abstract class VeexProvider(val domain: String) : MainAPI() { // all providers m
         val sources = movieItem.sources
         val source = sources?.first()
         if (source != null) {
-            callback.invoke(newExtractorLink("HD", "HD", source.url){
+            callback.invoke(newExtractorLink("HD", "HD", source.url) {
                 this.quality = Qualities.P1080.value
                 this.type = ExtractorLinkType.M3U8
             })
-            return  true
+            runAllAsync(
+                {
+                    invokeSubtitles(source.url, subtitleCallback)
+                }
+            )
+            return true
         }
         return false
+    }
+
+    suspend fun invokeSubtitles(
+        url: String,
+        subtitleCallback: (SubtitleFile) -> Unit,
+    ) {
+        val baseUrl = url.substringBeforeLast("/")
+        val mediaInfoUrl = baseUrl.plus("/mediainfo.json")
+        val response = app.get(mediaInfoUrl).toString()
+        val subtitles: List<MediaTrack> = parseJson<List<MediaTrack>>(response).filter {
+            it.type.lowercase() == "text" && it.Language.isNotEmpty()
+        }
+        subtitles.forEach {
+            subtitleCallback(
+                SubtitleFile(
+                    it.Language,
+                    "$baseUrl/sub-titles/${it.Language}-${it.ID}.srt"
+                )
+            )
+        }
     }
 
     private fun MovieItem.toSearchResponse(): SearchResponse {

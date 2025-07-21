@@ -1,5 +1,8 @@
 package com.paoneking
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.google.gson.annotations.SerializedName
+
 data class ApiResponse(
     val posters: List<MovieItem>?,
     val episodes: List<MovieItem>?,
@@ -63,5 +66,15 @@ data class Source(
     val external: Boolean?,
     val type: String,
     val url: String
+)
+
+data class MediaTrack(
+    @JsonProperty("@type") val type: String,
+    val ID: String = "",
+    val Format: String = "",
+    val CodecID: String = "",
+    val Language: String = "",
+    val Default: String = "",
+    val Forced: String = ""
 )
 
